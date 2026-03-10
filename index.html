@@ -4,14 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>EaziPTV</title>
-<meta name="description" content="EaziPTV - Lecteur IPTV Xtream & M3U">
-<meta name="theme-color" content="#0f0f0f">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="EaziPTV">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <!-- HLS.js — lecteur HLS natif pour Chrome Android -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
 <style>
@@ -892,45 +884,23 @@ async function doLogin(){
   }
 }
 
-// ═══════════════════════════════════════════
-//  PROXY CORS — contourne le blocage HTTP→HTTPS
-// ═══════════════════════════════════════════
-const PROXIES = [
- url => `https://wispy-thunder-aa58.mrlaw1021.workers.dev/?url=${encodeURIComponent(url)}`
-];
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-];
-
-async function fetchWithProxy(url, timeout=12000){
-  let lastErr;
-  for(const proxy of PROXIES){
-    const proxied = proxy(url);
-    try {
-      const c = new AbortController();
-      const t = setTimeout(()=>c.abort(), timeout);
-      const r = await fetch(proxied, {signal:c.signal});
-      clearTimeout(t);
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      const txt = await r.text();
-      return txt;
-    } catch(e){
-      lastErr = e;
-      // Si direct échoue (mixed content), essaye proxy suivant
-      continue;
-    }
-  }
-  throw new Error(lastErr?.message || 'Impossible de contacter le serveur');
-}
-
 async function apiGet(url){
-  const txt = await fetchWithProxy(url, 10000);
-  try { return JSON.parse(txt); }
-  catch(e){ throw new Error('Réponse invalide du serveur'); }
+  const c = new AbortController();
+  const t = setTimeout(()=>c.abort(), 10000);
+  const r = await fetch(url, {signal:c.signal});
+  clearTimeout(t);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const txt = await r.text();
+  return JSON.parse(txt);
 }
 
 async function fetchM3U(url){
-  const txt = await fetchWithProxy(url, 20000);
+  const c = new AbortController();
+  const t = setTimeout(()=>c.abort(), 12000);
+  const r = await fetch(url, {signal:c.signal});
+  clearTimeout(t);
+  if(!r.ok) throw new Error('M3U HTTP '+r.status);
+  const txt = await r.text();
   return parseM3U(txt);
 }
 
@@ -1462,11 +1432,6 @@ function toast(msg, type=''){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className=`toast ${type} show`;
   setTimeout(()=>t.className='toast',2600);
-}
-</script>
-<script>
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>
 </body>
