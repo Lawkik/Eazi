@@ -896,10 +896,10 @@ async function doLogin(){
 //  PROXY CORS — contourne le blocage HTTP→HTTPS
 // ═══════════════════════════════════════════
 const PROXIES = [
-  url => url,  // Direct d'abord
+  url => `https://wispy-thunder-aa58.mrlaw1021.workers.dev/?url=${encodeURIComponent(url)}`,
+  url => url,
   url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://proxy.cors.sh/${url}`,
 ];
 
 async function fetchWithProxy(url, timeout=12000){
